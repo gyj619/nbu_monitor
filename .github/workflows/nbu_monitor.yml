@@ -4,9 +4,9 @@ name: 宁波大学招生通知监测
 on:
   schedule:
     - cron: '*/30 * * * *' # 每 30 分钟运行一次
-  workflow_dispatch: # 允许在 GitHub 网页上手动点击运行
+  workflow_dispatch: # 允许在网页上手动点击运行
 
-# 赋予 GitHub Action 推送代码的权限（用来保存 .pkl 记录文件）
+# 赋予 GitHub Action 推送代码的权限
 permissions:
   contents: write
 
@@ -16,10 +16,10 @@ jobs:
 
     steps:
     - name: 检出代码
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4  # 【已修复】升级到 v4 解决 Node.js 警告
 
     - name: 配置 Python 环境
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5 # 【已修复】升级到 v5 解决 Node.js 警告
       with:
         python-version: '3.10'
 
@@ -28,13 +28,13 @@ jobs:
 
     - name: 运行监测脚本
       env:
-        EMAIL_PASS: ${{ secrets.EMAIL_PASS }} # 从你的 GitHub Secrets 读取邮箱授权码
+        EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
       run: python nbu.py
 
     - name: 保存状态文件并推送回仓库
       run: |
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
-        git add *_state.pkl
+        git add . || true  # 【已修复】即使没有文件生成也不会报错崩溃
         git commit -m "自动更新监测状态" || echo "状态没有变化，无需提交"
         git push
